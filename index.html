@@ -553,24 +553,22 @@ function applyUser(u){
   _currentSubFilter='';
   showTab('dashboard');
 
-  // Firebase tayyor bo'lgunicha kutamiz
+  // Firebase tayyor bo'lgunicha har 200ms tekshiramiz
+  let attempts=0;
   function trySync(){
+    attempts++;
     if(db){
       startRealtimeSync();
-    } else if(typeof initFirebase==='function'){
+    } else if(typeof firebase!=='undefined' && typeof initFirebase==='function'){
       initFirebase().then(()=>{
         if(db) startRealtimeSync();
         else { updateBadges(); renderDashboard(); }
       }).catch(()=>{ updateBadges(); renderDashboard(); });
+    } else if(attempts < 20){
+      setTimeout(trySync, 300); // 6 sekundgacha kutamiz
     }
   }
-
-  // Firebase SDK yuklanishi uchun bir oz kutamiz
-  if(typeof firebase==='undefined'){
-    setTimeout(trySync, 1500);
-  } else {
-    trySync();
-  }
+  setTimeout(trySync, 200);
 }
 
 function doLogin(){
