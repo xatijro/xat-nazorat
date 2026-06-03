@@ -556,14 +556,14 @@ function applyUser(u){
   const afterLoad=()=>{
     updateBadges();
     showTab('dashboard');
-    startRealtimeSync();
   };
 
   if(db){
-    loadLettersFromDB().then(afterLoad).catch(afterLoad);
+    // Real-time listener boshlash — u o'zi yuklab, render qiladi
+    startRealtimeSync();
   } else if(typeof initFirebase==='function'){
     initFirebase().then(()=>{
-      if(db) loadLettersFromDB().then(afterLoad).catch(afterLoad);
+      if(db) startRealtimeSync();
       else afterLoad();
     }).catch(afterLoad);
   } else {
@@ -2117,11 +2117,9 @@ function initFirebase(){
 async function loadLettersFromDB(){
   try{
     const snap=await db.collection('letters').get();
-    if(!snap.empty){
-      letters=snap.docs.map(d=>({...d.data(),_fbId:d.id}));
-      letters.sort((a,b)=>(a.muddat||'').localeCompare(b.muddat||''));
-      nextId=Math.max(...letters.map(l=>l.id||0),0)+1;
-    }
+    letters=snap.docs.map(d=>({...d.data(),_fbId:d.id}));
+    letters.sort((a,b)=>(a.muddat||'').localeCompare(b.muddat||''));
+    if(letters.length>0) nextId=Math.max(...letters.map(l=>l.id||0),0)+1;
   }catch(e){console.error('Xatlarni yuklashda xato:',e);}
 }
 
@@ -2138,28 +2136,16 @@ async function saveLetterToDB(letter){
   }catch(e){console.error('Saqlashda xato:',e);}
 }
 
-// Firebase dan foydalanuvchi ma'lumotlarini olish
-async function loadUsersFromDB(){
-  try{
-    const snap=await db.collection('users').get();
-    if(!snap.empty){
-      // Firebase users collection dan ma'lumot olish (ixtiyoriy)
-    }
-  }catch(e){}
-}
-
-// Real-time listener — yangi xatlar qo'shilsa avtomatik yangilanadi
+// Real-time listener
 function startRealtimeSync(){
   if(!db) return;
   db.collection('letters').onSnapshot(snap=>{
-    if(!snap.empty){
-      letters=snap.docs.map(d=>({...d.data(),_fbId:d.id}));
-      letters.sort((a,b)=>(a.muddat||'').localeCompare(b.muddat||''));
-      nextId=Math.max(...letters.map(l=>l.id||0),0)+1;
-      updateBadges();
-      if(currentTab!=='dashboard'&&currentTab!=='report') applySearch();
-      else if(currentTab==='dashboard') renderDashboard();
-    }
+    letters=snap.docs.map(d=>({...d.data(),_fbId:d.id}));
+    letters.sort((a,b)=>(a.muddat||'').localeCompare(b.muddat||''));
+    if(letters.length>0) nextId=Math.max(...letters.map(l=>l.id||0),0)+1;
+    updateBadges();
+    if(currentTab==='dashboard') renderDashboard();
+    else if(currentTab!=='report') applySearch();
   }, e=>console.error('Sync xato:',e));
 }
 
