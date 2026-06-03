@@ -553,22 +553,19 @@ function applyUser(u){
   _currentSubFilter='';
   showTab('dashboard');
 
-  // Firebase tayyor bo'lgunicha har 200ms tekshiramiz
-  let attempts=0;
-  function trySync(){
-    attempts++;
-    if(db){
-      startRealtimeSync();
-    } else if(typeof firebase!=='undefined' && typeof initFirebase==='function'){
-      initFirebase().then(()=>{
-        if(db) startRealtimeSync();
-        else { updateBadges(); renderDashboard(); }
-      }).catch(()=>{ updateBadges(); renderDashboard(); });
-    } else if(attempts < 20){
-      setTimeout(trySync, 300); // 6 sekundgacha kutamiz
+  // db allaqachon tayyor (restoreSession Firebase init dan keyin chaqiriladi)
+  if(db){
+    startRealtimeSync();
+  } else {
+    // Fallback
+    let attempts=0;
+    function trySync(){
+      attempts++;
+      if(db){ startRealtimeSync(); }
+      else if(attempts<15){ setTimeout(trySync,300); }
     }
+    trySync();
   }
-  setTimeout(trySync, 200);
 }
 
 function doLogin(){
@@ -592,8 +589,22 @@ function doLogout(){
   document.getElementById('passInput').value='';
 }
 
-// Sahifa yuklanganda sessiyani tiklash
-(function restoreSession(){
+// Sahifa yuklanganda Firebase init, keyin sessiyani tiklash
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(typeof initFirebase==='function'){
+    initFirebase().then(()=>{
+      console.log('Firebase tayyor ✅, db:', !!db);
+      restoreSession();
+    }).catch(e=>{
+      console.log('Firebase xato:', e);
+      restoreSession();
+    });
+  } else {
+    restoreSession();
+  }
+});
+
+function restoreSession(){
   try{
     const l=sessionStorage.getItem('currentUserLogin');
     const p=sessionStorage.getItem('currentUserPass');
@@ -602,7 +613,7 @@ function doLogout(){
       if(u){ applyUser(u); return; }
     }
   }catch(e){}
-})();
+}
 
 // ========== STATUS ==========
 function getDaysLeft(muddat){
@@ -2150,12 +2161,8 @@ function startRealtimeSync(){
   }, e=>console.error('Sync xato:',e));
 }
 
-// Firebase init — fon rejimida
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',()=>{ if(typeof initFirebase==='function') initFirebase().catch(()=>{}); });
-} else {
-  if(typeof initFirebase==='function') initFirebase().catch(()=>{});
-}
+// Firebase init — DOMContentLoaded da restoreSession ichida amalga oshiriladi
+
 </script>
 </body>
 </html>
