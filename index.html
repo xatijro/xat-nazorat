@@ -2116,9 +2116,10 @@ function initFirebase(){
 // Firebase dan xatlarni yuklash
 async function loadLettersFromDB(){
   try{
-    const snap=await db.collection('letters').orderBy('muddat','asc').get();
+    const snap=await db.collection('letters').get();
     if(!snap.empty){
       letters=snap.docs.map(d=>({...d.data(),_fbId:d.id}));
+      letters.sort((a,b)=>(a.muddat||'').localeCompare(b.muddat||''));
       nextId=Math.max(...letters.map(l=>l.id||0),0)+1;
     }
   }catch(e){console.error('Xatlarni yuklashda xato:',e);}
@@ -2150,9 +2151,10 @@ async function loadUsersFromDB(){
 // Real-time listener — yangi xatlar qo'shilsa avtomatik yangilanadi
 function startRealtimeSync(){
   if(!db) return;
-  db.collection('letters').orderBy('muddat','asc').onSnapshot(snap=>{
+  db.collection('letters').onSnapshot(snap=>{
     if(!snap.empty){
       letters=snap.docs.map(d=>({...d.data(),_fbId:d.id}));
+      letters.sort((a,b)=>(a.muddat||'').localeCompare(b.muddat||''));
       nextId=Math.max(...letters.map(l=>l.id||0),0)+1;
       updateBadges();
       if(currentTab!=='dashboard'&&currentTab!=='report') applySearch();
