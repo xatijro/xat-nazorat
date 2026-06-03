@@ -550,12 +550,24 @@ function applyUser(u){
   document.getElementById('topAv').textContent=u.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('topName').textContent=u.name;
   document.getElementById('topRole').textContent=u.rol==='masul'?'Mas\'ul xodim (Ijro bo\'yicha)':u.fullname;
-  updateBadges();
   _currentSubFilter='';
-  showTab('dashboard');
-  if(db){ loadLettersFromDB().then(()=>{ updateBadges(); startRealtimeSync(); applySearch(); }); }
-  else if(typeof initFirebase==='function'){
-    initFirebase().then(()=>{ if(db){ loadLettersFromDB().then(()=>{ updateBadges(); startRealtimeSync(); applySearch(); }); } }).catch(()=>{});
+
+  // Firebase dan yuklab, keyin ko'rsatish
+  const afterLoad=()=>{
+    updateBadges();
+    showTab('dashboard');
+    startRealtimeSync();
+  };
+
+  if(db){
+    loadLettersFromDB().then(afterLoad).catch(afterLoad);
+  } else if(typeof initFirebase==='function'){
+    initFirebase().then(()=>{
+      if(db) loadLettersFromDB().then(afterLoad).catch(afterLoad);
+      else afterLoad();
+    }).catch(afterLoad);
+  } else {
+    afterLoad();
   }
 }
 
@@ -653,7 +665,10 @@ function markKorilgan(l){
   const key=getUserKey();
   if(!key) return;
   if(!l.korilgan) l.korilgan=[];
-  if(!l.korilgan.includes(key)) l.korilgan.push(key);
+  if(!l.korilgan.includes(key)){
+    l.korilgan.push(key);
+    syncLetterToDB(l);
+  }
 }
 
 function updateBadges(){
@@ -1827,12 +1842,29 @@ function openDetail(id){
 function closeDetail(){document.getElementById('detailOverlay').classList.remove('show');}
 document.getElementById('detailOverlay').addEventListener('click',function(e){if(e.target===this)closeDetail();});
 
+// Firebase ga xat holatini saqlash
+function syncLetterToDB(l){
+  if(db && l._fbId){
+    db.collection('letters').doc(l._fbId).update({
+      xodim_status: l.xodim_status||null,
+      bajarilgan: l.bajarilgan||false,
+      bajarilgan_kutilmoqda: l.bajarilgan_kutilmoqda||false,
+      rad_etilgan: l.rad_etilgan||false,
+      rad_vaqt: l.rad_vaqt||null,
+      korilgan: l.korilgan||[],
+      izohlar: l.izohlar||[],
+      etirozlar: l.etirozlar||[]
+    }).catch(e=>console.error('Sync xato:',e));
+  }
+}
+
 function setStatus(id,st,btn){
   const l=letters.find(x=>x.id===id);
   if(!l)return;
   l.xodim_status=st;
   btn.closest('.status-selector').querySelectorAll('.status-btn').forEach(b=>b.classList.remove('active-s'));
   btn.classList.add('active-s');
+  syncLetterToDB(l);
   updateBadges();
 }
 
@@ -1856,7 +1888,6 @@ function saveXodimHolat(id){
   if(!l)return;
   const st=_selectedHolat[id];
   if(!st){alert('Iltimos holat tanlang!');return;}
-  // Qizil/sariq uchun izoh majburiy
   if(st==='red'||st==='yellow'){
     const ta=document.getElementById('xodim-izoh-status');
     const txt=(ta?ta.value:'').trim();
@@ -1866,10 +1897,12 @@ function saveXodimHolat(id){
       return;
     }
     const now=new Date().toLocaleString('uz-UZ',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',','');
+    if(!l.izohlar) l.izohlar=[];
     l.izohlar.push({user:currentUser.name,rol:'xodim',matn:txt,vaqt:now});
   }
   l.xodim_status=st;
   delete _selectedHolat[id];
+  syncLetterToDB(l);
   updateBadges();
   closeDetail();
   applySearch();
@@ -1879,6 +1912,7 @@ function xodimBajarildi(id){
   const l=letters.find(x=>x.id===id);
   if(!l)return;
   l.bajarilgan_kutilmoqda=true;
+  syncLetterToDB(l);
   updateBadges();
   applySearch();
 }
@@ -1889,6 +1923,7 @@ function masulTasdiqlaydi(id){
   l.bajarilgan=true;
   l.bajarilgan_kutilmoqda=false;
   l.xodim_status='done';
+  syncLetterToDB(l);
   updateBadges();
   applySearch();
 }
@@ -1899,25 +1934,32 @@ function masulRadEtadi(id){
   l.bajarilgan_kutilmoqda=false;
   l.rad_etilgan=true;
   l.rad_vaqt=new Date().toLocaleString('uz-UZ',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',','');
+  syncLetterToDB(l);
   updateBadges();
   applySearch();
 }
 
 function saveXodimIzoh(id){
   const l=letters.find(x=>x.id===id);
+  if(!l)return;
   const txt=(document.getElementById('xodim-izoh')||{}).value||'';
   if(!txt.trim()){alert('Izoh matni kiriting!');return;}
   const now=new Date().toLocaleString('uz-UZ',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',','');
+  if(!l.izohlar) l.izohlar=[];
   l.izohlar.push({user:currentUser.name,rol:'xodim',matn:txt.trim(),vaqt:now});
+  syncLetterToDB(l);
   openDetail(id);
 }
 
 function saveRahbarIzoh(id){
   const l=letters.find(x=>x.id===id);
+  if(!l)return;
   const txt=(document.getElementById('rahbar-izoh')||{}).value||'';
   if(!txt.trim()){alert('Etioz matni kiriting!');return;}
   const now=new Date().toLocaleString('uz-UZ',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',','');
+  if(!l.etirozlar) l.etirozlar=[];
   l.etirozlar.push({user:currentUser.name,rol:'rahbar',matn:txt.trim(),vaqt:now});
+  syncLetterToDB(l);
   openDetail(id);
 }
 
