@@ -551,23 +551,25 @@ function applyUser(u){
   document.getElementById('topName').textContent=u.name;
   document.getElementById('topRole').textContent=u.rol==='masul'?'Mas\'ul xodim (Ijro bo\'yicha)':u.fullname;
   _currentSubFilter='';
+  showTab('dashboard');
 
-  // Firebase dan yuklab, keyin ko'rsatish
-  const afterLoad=()=>{
-    updateBadges();
-    showTab('dashboard');
-  };
+  // Firebase tayyor bo'lgunicha kutamiz
+  function trySync(){
+    if(db){
+      startRealtimeSync();
+    } else if(typeof initFirebase==='function'){
+      initFirebase().then(()=>{
+        if(db) startRealtimeSync();
+        else { updateBadges(); renderDashboard(); }
+      }).catch(()=>{ updateBadges(); renderDashboard(); });
+    }
+  }
 
-  if(db){
-    // Real-time listener boshlash — u o'zi yuklab, render qiladi
-    startRealtimeSync();
-  } else if(typeof initFirebase==='function'){
-    initFirebase().then(()=>{
-      if(db) startRealtimeSync();
-      else afterLoad();
-    }).catch(afterLoad);
+  // Firebase SDK yuklanishi uchun bir oz kutamiz
+  if(typeof firebase==='undefined'){
+    setTimeout(trySync, 1500);
   } else {
-    afterLoad();
+    trySync();
   }
 }
 
@@ -2144,7 +2146,8 @@ function startRealtimeSync(){
     letters.sort((a,b)=>(a.muddat||'').localeCompare(b.muddat||''));
     if(letters.length>0) nextId=Math.max(...letters.map(l=>l.id||0),0)+1;
     updateBadges();
-    if(currentTab==='dashboard') renderDashboard();
+    // Joriy tabni qayta render qilish
+    if(currentTab==='dashboard'||currentTab==='all') renderDashboard();
     else if(currentTab!=='report') applySearch();
   }, e=>console.error('Sync xato:',e));
 }
