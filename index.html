@@ -542,7 +542,7 @@ let letters = [];
 let nextId = 1;
 
 // Mavlonov (masul) tekshiruvi — rol yoki isMasul flag
-function isMasulUser(){ return currentUser && (isMasulUser() || currentUser.isMasul===true); }
+function isMasulUser(){ return currentUser && (currentUser.rol==='masul' || currentUser.isMasul===true); }
 
 // ========== AUTH ==========
 function applyUser(u){
