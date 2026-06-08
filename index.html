@@ -366,7 +366,7 @@ tbody tr:hover{background:#f8fafc}
             <option value="B.Jamolov">B.Jamolov</option>
             <option value="R.Badalov">R.Badalov</option>
             <option value="B.Mannonov">B.Mannonov</option>
-            <option value="F.Mavlanov">F.Mavlanov</option>
+            <option value="F.Mavlonov">F.Mavlonov</option>
             <option value="J.O'rolov">J.O'rolov</option>
             <option value="A.Abdurakhmanov">A.Abdurakhmanov</option>
             <option value="J.Bahodirov">J.Bahodirov</option>
@@ -481,7 +481,7 @@ tbody tr:hover{background:#f8fafc}
             <option value="B.Jamolov">B.Jamolov</option>
             <option value="R.Badalov">R.Badalov</option>
             <option value="B.Mannonov">B.Mannonov</option>
-            <option value="F.Mavlanov">F.Mavlanov</option>
+            <option value="F.Mavlonov">F.Mavlonov</option>
             <option value="J.O'rolov">J.O'rolov</option>
             <option value="A.Abdurakhmanov">A.Abdurakhmanov</option>
             <option value="J.Bahodirov">J.Bahodirov</option>
@@ -519,7 +519,7 @@ const USERS = [
   {login:'kodirov.u',    pass:'Kodirov@2026',       name:'Kodirov U.G\'.',         rol:'rahbar', fullname:'Kodirov Utkirjon G\'ayratovich'},
   {login:'davletov.m',   pass:'Davletov@2026',       name:'Davletov M.R.',          rol:'rahbar', fullname:'Davletov Murod Rustamovich', key:'M.Davletov'},
   {login:'nazarov.f',    pass:'Nazarov@2026',        name:'Nazarov F.A.',           rol:'rahbar', fullname:'Nazarov Farxod Ahmadjanovich', key:'F.Nazarov'},
-  {login:'mavlonov.f',   pass:'Mavlonov@2026',       name:'Mavlonov F.Sh.',         rol:'xodim',  fullname:'Mavlonov Farrux Shodiqulovich', key:'F.Mavlanov', isMasul:true},
+  {login:'mavlonov.f',   pass:'Mavlonov@2026',       name:'Mavlonov F.Sh.',         rol:'xodim',  fullname:'Mavlonov Farrux Shodiqulovich', key:'F.Mavlonov', isMasul:true},
   {login:'urolov.j',     pass:'Orolov@2026',         name:'O\'rolov J.O.',          rol:'xodim',  fullname:'O\'rolov Javohir Ollaberdi o\'g\'li', key:'J.O\'rolov'},
   {login:'mannonov.b',   pass:'Mannonov@2026',       name:'Mannonov B.I.',          rol:'xodim',  fullname:'Mannonov Behruz Ismoil o\'g\'li', key:'B.Mannonov'},
   {login:'rahimov.d',    pass:'Rahimov@2026',        name:'Rahimov D.A.',           rol:'xodim',  fullname:'Rahimov Doniyor Alisherovich', key:'D.Rahimov'},
@@ -593,18 +593,15 @@ function doLogout(){
 }
 
 // Sahifa yuklanganda Firebase init, keyin sessiyani tiklash
-document.addEventListener('DOMContentLoaded', ()=>{
-  if(typeof initFirebase==='function'){
-    initFirebase().then(()=>{
-      console.log('Firebase tayyor ✅, db:', !!db);
-      restoreSession();
-    }).catch(e=>{
-      console.log('Firebase xato:', e);
-      restoreSession();
-    });
-  } else {
-    restoreSession();
+document.addEventListener('DOMContentLoaded', async ()=>{
+  try{
+    await initFirebase();
+    console.log('Firebase tayyor ✅, db:', !!db);
+  }catch(e){
+    console.error('Firebase xato:', e);
   }
+  restoreSession();
+  if(db && currentUser) startRealtimeSync();
 });
 
 function restoreSession(){
@@ -820,7 +817,7 @@ function renderTable(data, subFilter){
                 <option value="B.Jamolov">B.Jamolov</option>
                 <option value="R.Badalov">R.Badalov</option>
                 <option value="B.Mannonov">B.Mannonov</option>
-                <option value="F.Mavlanov">F.Mavlanov</option>
+                <option value="F.Mavlonov">F.Mavlonov</option>
                 <option value="J.Orolov">J.O'rolov</option>
                 <option value="A.Abdurakhmanov">A.Abdurakhmanov</option>
                 <option value="J.Bahodirov">J.Bahodirov</option>
@@ -1373,7 +1370,7 @@ function downloadTemplate(){
       'Muddat (KK.OO.YYYY)',
       'Mas\'ul tashkilot',
       'Mas\'ul rahbar',
-      'Mas\'ul ijrochi (D.Rahimov / B.Jamolov / R.Badalov / B.Mannonov / F.Mavlanov / J.O\'rolov / A.Abdurakhmanov / J.Bahodirov / O.Ahmedov)',
+      'Mas\'ul ijrochi (D.Rahimov / B.Jamolov / R.Badalov / B.Mannonov / F.Mavlonov / J.O\'rolov / A.Abdurakhmanov / J.Bahodirov / O.Ahmedov)',
       'Ijrochi turi (Asosiy / Teng kuchli / Hamijrochi)',
       'Topshiriq kodi'
     ];
@@ -1423,7 +1420,7 @@ function handleExcelFile(file){
   reader.readAsArrayBuffer(file);
 }
 
-const IJROCHILAR_LIST=['M.Davletov','F.Nazarov','N.Lutfullayev','D.Rahimov','B.Jamolov','R.Badalov','B.Mannonov','F.Mavlanov','J.O\'rolov','A.Abdurakhmanov','J.Bahodirov','O.Ahmedov'];
+const IJROCHILAR_LIST=['M.Davletov','F.Nazarov','N.Lutfullayev','D.Rahimov','B.Jamolov','R.Badalov','B.Mannonov','F.Mavlonov','J.O\'rolov','A.Abdurakhmanov','J.Bahodirov','O.Ahmedov'];
 const RAHBARLAR_LIST=['Kodirov Utkirjon','Davletov Murod','Nazarov Farxod','Lutfullayev Nasrullo'];
 
 function parseExcel(arrayBuffer){
@@ -1554,7 +1551,7 @@ function parseExcel(arrayBuffer){
     'B.Jamolov':   ['jamolov','жамолов','bahodir','баҳодир'],
     'R.Badalov':   ['badalov','бадалов','rustam','рустам'],
     'B.Mannonov':  ['mannonov','маннонов','behruz','беҳруз'],
-    'F.Mavlanov':  ['mavlonov','мавлонов','farrux','фаррух'],
+    'F.Mavlonov':  ['mavlonov','мавлонов','farrux','фаррух'],
     "J.O'rolov":   ['orolov','ўролов','уролов','javohir','жавоҳир','o\'rolov','orolov'],
     'A.Abdurakhmanov':['abdurakhmanov','abduraxmanov','абдурахманов','абдураҳманов','akmal','акмал'],
     'J.Bahodirov': ['bahodirov','бахoдиров','баҳодиров','jahongir','жаҳонгир'],
@@ -2003,7 +2000,7 @@ function renderReport(){
   const xodimR=letters.filter(l=>l.xodim_status==='red').length;
   const xodimN=total-xodimG-xodimY-xodimR;
 
-  const IJROCHILAR=['D.Rahimov','B.Jamolov','R.Badalov','B.Mannonov','F.Mavlanov','J.O\'rolov','A.Abdurakhmanov','J.Bahodirov','O.Ahmedov'];
+  const IJROCHILAR=['D.Rahimov','B.Jamolov','R.Badalov','B.Mannonov','F.Mavlonov','J.O\'rolov','A.Abdurakhmanov','J.Bahodirov','O.Ahmedov'];
 
   function bar(label,val,max,color){
     const pct=max>0?Math.round(val/max*100):0;
