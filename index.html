@@ -665,7 +665,8 @@ function isIjrochi(l){
   if(!currentUser) return false;
   const key = currentUser.key;
   if(!key) return false;
-  return l.ijrochi === key;
+  const alt=key.replace('Mavlonov','Mavlanov');
+  return l.ijrochi === key || l.ijrochi === alt;
 }
 function getUserKey(){
   if(!currentUser) return null;
@@ -1093,8 +1094,8 @@ function applySearch(){
   // Ijrochi filtri
   const ijTur=val('fIjTur')||ijTur2;
   if(ij){
-    const ijNorm=ij.replace('Orolov',"O'rolov");
-    data=data.filter(l=>l.ijrochi===ij||l.ijrochi===ijNorm);
+    const ijNorm=ij.replace('Orolov',"O'rolov").replace('Mavlonov','Mavlanov').replace('Mavlanov','Mavlonov');
+    data=data.filter(l=>l.ijrochi===ij||l.ijrochi===ijNorm||l.ijrochi===ij.replace('Mavlonov','Mavlanov'));
   }
   if(ijTur){
     const ijTurL=ijTur.trim().toLowerCase().replace(/\s/g,'');
