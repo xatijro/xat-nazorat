@@ -366,7 +366,7 @@ tbody tr:hover{background:#f8fafc}
             <option value="B.Jamolov">B.Jamolov</option>
             <option value="R.Badalov">R.Badalov</option>
             <option value="B.Mannonov">B.Mannonov</option>
-            <option value="F.Mavlonov">F.Mavlonov</option>
+            <option value="F.Mavlanov">F.Mavlanov</option>
             <option value="J.O'rolov">J.O'rolov</option>
             <option value="A.Abdurakhmanov">A.Abdurakhmanov</option>
             <option value="J.Bahodirov">J.Bahodirov</option>
@@ -481,7 +481,7 @@ tbody tr:hover{background:#f8fafc}
             <option value="B.Jamolov">B.Jamolov</option>
             <option value="R.Badalov">R.Badalov</option>
             <option value="B.Mannonov">B.Mannonov</option>
-            <option value="F.Mavlonov">F.Mavlonov</option>
+            <option value="F.Mavlanov">F.Mavlanov</option>
             <option value="J.O'rolov">J.O'rolov</option>
             <option value="A.Abdurakhmanov">A.Abdurakhmanov</option>
             <option value="J.Bahodirov">J.Bahodirov</option>
@@ -519,7 +519,7 @@ const USERS = [
   {login:'kodirov.u',    pass:'Kodirov@2026',       name:'Kodirov U.G\'.',         rol:'rahbar', fullname:'Kodirov Utkirjon G\'ayratovich'},
   {login:'davletov.m',   pass:'Davletov@2026',       name:'Davletov M.R.',          rol:'rahbar', fullname:'Davletov Murod Rustamovich', key:'M.Davletov'},
   {login:'nazarov.f',    pass:'Nazarov@2026',        name:'Nazarov F.A.',           rol:'rahbar', fullname:'Nazarov Farxod Ahmadjanovich', key:'F.Nazarov'},
-  {login:'mavlonov.f',   pass:'Mavlonov@2026',       name:'Mavlonov F.Sh.',         rol:'masul',  fullname:'Mavlonov Farrux Shodiqulovich', key:'F.Mavlonov'},
+  {login:'mavlanov.f',   pass:'Mavlanov@2026',       name:'Mavlanov F.Sh.',         rol:'xodim',  fullname:'Mavlanov Farrux Shodiqulovich', key:'F.Mavlanov', isMasul:true},
   {login:'urolov.j',     pass:'Orolov@2026',         name:'O\'rolov J.O.',          rol:'xodim',  fullname:'O\'rolov Javohir Ollaberdi o\'g\'li', key:'J.O\'rolov'},
   {login:'mannonov.b',   pass:'Mannonov@2026',       name:'Mannonov B.I.',          rol:'xodim',  fullname:'Mannonov Behruz Ismoil o\'g\'li', key:'B.Mannonov'},
   {login:'rahimov.d',    pass:'Rahimov@2026',        name:'Rahimov D.A.',           rol:'xodim',  fullname:'Rahimov Doniyor Alisherovich', key:'D.Rahimov'},
@@ -541,6 +541,9 @@ let currentTab = 'all';
 let letters = [];
 let nextId = 1;
 
+// Mavlonov (masul) tekshiruvi — rol yoki isMasul flag
+function isMasulUser(){ return currentUser && (isMasulUser() || currentUser.isMasul===true); }
+
 // ========== AUTH ==========
 function applyUser(u){
   currentUser=u;
@@ -549,7 +552,7 @@ function applyUser(u){
   document.getElementById('appPage').style.display='flex';
   document.getElementById('topAv').textContent=u.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('topName').textContent=u.name;
-  document.getElementById('topRole').textContent=u.rol==='masul'?'Mas\'ul xodim (Ijro bo\'yicha)':u.fullname;
+  document.getElementById('topRole').textContent=(u.isMasul||u.rol==='masul')?'Mas\'ul xodim (Ijro bo\'yicha)':u.fullname;
   _currentSubFilter='';
   showTab('dashboard');
 
@@ -689,7 +692,7 @@ function updateBadges(){
   const done=letters.filter(l=>l.bajarilgan===true).length;
   let unread=0;
   if(currentUser){
-    if(currentUser.rol==='xodim'||currentUser.rol==='masul'){
+    if(currentUser.rol==='xodim'||isMasulUser()){
       // Xodim/masul: faqat o'ziga biriktirilgan xatlardan ko'rilmaganlar
       unread=letters.filter(l=>isIjrochi(l)&&!isKorilgan(l)).length;
     } else if(currentUser.rol==='rahbar'){
@@ -763,7 +766,7 @@ function showTab(tab){
 
 // ========== RENDER TABLE ==========
 function renderTable(data, subFilter){
-  const canAdd = currentUser.rol==='rahbar' || currentUser.rol==='masul';
+  const canAdd = currentUser.rol==='rahbar' || isMasulUser();
   const isTurTab = currentTab.startsWith('t');
 
   function pillBtn(val, lbl, tc, bg, bd, idSuffix){
@@ -815,7 +818,7 @@ function renderTable(data, subFilter){
                 <option value="B.Jamolov">B.Jamolov</option>
                 <option value="R.Badalov">R.Badalov</option>
                 <option value="B.Mannonov">B.Mannonov</option>
-                <option value="F.Mavlonov">F.Mavlonov</option>
+                <option value="F.Mavlanov">F.Mavlanov</option>
                 <option value="J.Orolov">J.O'rolov</option>
                 <option value="A.Abdurakhmanov">A.Abdurakhmanov</option>
                 <option value="J.Bahodirov">J.Bahodirov</option>
@@ -1139,7 +1142,7 @@ function buildRows(data){
           ? `<span style="background:#ffebee;color:#c62828;border:1px solid #ef9a9a;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap">⛔ Rad etilgan</span>`
           : (xodimSt ? statusPill(xodimSt) : '<span style="color:#94a3b8;font-size:11px">—</span>')));
     // Bajarildi tugmasi
-    const isMasul = currentUser && currentUser.rol==='masul';
+    const isMasul = currentUser && isMasulUser();
     let bajarildiBtn='';
     if(!l.bajarilgan){
       if(menIjrochiman && !l.bajarilgan_kutilmoqda){
@@ -1164,7 +1167,7 @@ function buildRows(data){
       ${korilganCell}
       <td style="white-space:nowrap">
         <button class="act-btn" onclick="openDetail(${l.id})">👁 Ko'rish</button>
-        ${currentUser&&currentUser.rol==='masul'?`<button class="act-btn" style="margin-left:4px;color:#1a3558;border-color:#90caf9" onclick="openEdit(${l.id})">✏️ Tahrir</button>`:''}
+        ${currentUser&&isMasulUser()?`<button class="act-btn" style="margin-left:4px;color:#1a3558;border-color:#90caf9" onclick="openEdit(${l.id})">✏️ Tahrir</button>`:''}
       </td>
     </tr>`;
   }).join('') || `<tr><td colspan="10" style="text-align:center;padding:24px;color:#94a3b8">Xatlar topilmadi</td></tr>`;
@@ -1219,7 +1222,7 @@ function renderDashboard(){
     <h2 style="font-size:16px;font-weight:700;color:var(--navy)">📊 Dashboard</h2>
     <div style="display:flex;align-items:center;gap:10px">
       <span style="font-size:11px;color:#94a3b8">Jami ${total} ta topshiriq xati</span>
-      ${currentUser&&currentUser.rol==='masul'?`
+      ${currentUser&&isMasulUser()?`
         <button class="btn btn-primary" onclick="openAdd()" style="height:34px;padding:0 14px;font-size:12px">➕ Yangi xat</button>
       `:''}
     </div>
@@ -1366,7 +1369,7 @@ function downloadTemplate(){
       'Muddat (KK.OO.YYYY)',
       'Mas\'ul tashkilot',
       'Mas\'ul rahbar',
-      'Mas\'ul ijrochi (D.Rahimov / B.Jamolov / R.Badalov / B.Mannonov / F.Mavlonov / J.O\'rolov / A.Abdurakhmanov / J.Bahodirov / O.Ahmedov)',
+      'Mas\'ul ijrochi (D.Rahimov / B.Jamolov / R.Badalov / B.Mannonov / F.Mavlanov / J.O\'rolov / A.Abdurakhmanov / J.Bahodirov / O.Ahmedov)',
       'Ijrochi turi (Asosiy / Teng kuchli / Hamijrochi)',
       'Topshiriq kodi'
     ];
@@ -1416,7 +1419,7 @@ function handleExcelFile(file){
   reader.readAsArrayBuffer(file);
 }
 
-const IJROCHILAR_LIST=['M.Davletov','F.Nazarov','N.Lutfullayev','D.Rahimov','B.Jamolov','R.Badalov','B.Mannonov','F.Mavlonov','J.O\'rolov','A.Abdurakhmanov','J.Bahodirov','O.Ahmedov'];
+const IJROCHILAR_LIST=['M.Davletov','F.Nazarov','N.Lutfullayev','D.Rahimov','B.Jamolov','R.Badalov','B.Mannonov','F.Mavlanov','J.O\'rolov','A.Abdurakhmanov','J.Bahodirov','O.Ahmedov'];
 const RAHBARLAR_LIST=['Kodirov Utkirjon','Davletov Murod','Nazarov Farxod','Lutfullayev Nasrullo'];
 
 function parseExcel(arrayBuffer){
@@ -1547,7 +1550,7 @@ function parseExcel(arrayBuffer){
     'B.Jamolov':   ['jamolov','жамолов','bahodir','баҳодир'],
     'R.Badalov':   ['badalov','бадалов','rustam','рустам'],
     'B.Mannonov':  ['mannonov','маннонов','behruz','беҳруз'],
-    'F.Mavlonov':  ['mavlonov','мавлонов','farrux','фаррух'],
+    'F.Mavlanov':  ['mavlanov','мавлонов','farrux','фаррух'],
     "J.O'rolov":   ['orolov','ўролов','уролов','javohir','жавоҳир','o\'rolov','orolov'],
     'A.Abdurakhmanov':['abdurakhmanov','abduraxmanov','абдурахманов','абдураҳманов','akmal','акмал'],
     'J.Bahodirov': ['bahodirov','бахoдиров','баҳодиров','jahongir','жаҳонгир'],
@@ -1714,7 +1717,7 @@ function openDetail(id){
   const l=letters.find(x=>x.id===id);
   if(!l)return;
   // Ko'rilgan deb belgilash — ijrochi uchun o'z xati, rahbar uchun har qanday xat
-  if(isIjrochi(l)||currentUser.rol==='rahbar'||currentUser.rol==='masul'){
+  if(isIjrochi(l)||currentUser.rol==='rahbar'||isMasulUser()){
     if(!isKorilgan(l)){
       markKorilgan(l);
       updateBadges();
@@ -1724,12 +1727,12 @@ function openDetail(id){
   document.getElementById('dp-title').textContent=`Xat #${l.id} — ${TUR_NAMES[l.tur]}`;
   const isMyLetter = isIjrochi(l); // barcha rollar uchun — xodim, masul, rahbar-ijrochi
   const isRahbar = currentUser.rol==='rahbar';
-  const isMasul = currentUser.rol==='masul';
+  const isMasul = isMasulUser();
   const autoSt=getAutoStatus(l.muddat);
   const d=getDaysLeft(l.muddat);
 
   let statusBlock='';
-  const isMasulUser = currentUser.rol==='masul';
+  const isMasulUser = isMasulUser();
   if(l.bajarilgan){
     statusBlock=`<div class="dp-section"><div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:12px;text-align:center;font-size:13px;font-weight:700;color:#1b5e20">✅ Bu xat nazoratdan echilgan</div></div>`;
   } else if(l.bajarilgan_kutilmoqda && isMasulUser){
@@ -1920,6 +1923,8 @@ function saveXodimHolat(id){
     l.izohlar.push({user:currentUser.name,rol:'xodim',matn:txt,vaqt:now});
   }
   l.xodim_status=st;
+  l.rad_etilgan=false; // Yangi holat belgilanganda rad etilgan ko'rinishi yo'qoladi
+  l.rad_vaqt=null;
   delete _selectedHolat[id];
   syncLetterToDB(l);
   updateBadges();
@@ -1994,7 +1999,7 @@ function renderReport(){
   const xodimR=letters.filter(l=>l.xodim_status==='red').length;
   const xodimN=total-xodimG-xodimY-xodimR;
 
-  const IJROCHILAR=['D.Rahimov','B.Jamolov','R.Badalov','B.Mannonov','F.Mavlonov','J.O\'rolov','A.Abdurakhmanov','J.Bahodirov','O.Ahmedov'];
+  const IJROCHILAR=['D.Rahimov','B.Jamolov','R.Badalov','B.Mannonov','F.Mavlanov','J.O\'rolov','A.Abdurakhmanov','J.Bahodirov','O.Ahmedov'];
 
   function bar(label,val,max,color){
     const pct=max>0?Math.round(val/max*100):0;
