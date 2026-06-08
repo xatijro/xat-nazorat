@@ -1300,6 +1300,14 @@ function saveEdit(){
   l.ijrochi_tur=document.getElementById('e_ijrochi_tur').value;
   l.ijrochi=document.getElementById('e_ijrochi').value;
   l.muddat=document.getElementById('e_muddat').value||l.muddat;
+  // Firebase ga saqlash
+  if(db && l._fbId){
+    db.collection('letters').doc(l._fbId).update({
+      raqam:l.raqam, kod:l.kod, tur:l.tur, hujjat:l.hujjat,
+      mazmun:l.mazmun, tashkilot:l.tashkilot, rahbar:l.rahbar,
+      ijrochi_tur:l.ijrochi_tur, ijrochi:l.ijrochi, muddat:l.muddat
+    }).catch(e=>console.error('saveEdit xato:',e));
+  }
   closeEdit();
   updateBadges();
   applySearch();
