@@ -2119,11 +2119,21 @@ function loadScript(src){
   });
 }
 async function initFirebase(){
-  if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){return;}
+  if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
+    if(auth && !auth.currentUser){ try{ await auth.signInAnonymously(); }catch(e){ console.error('Anon signIn xato:',e); } }
+    return;
+  }
   await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+  await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js');
   await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js');
   fbApp=firebase.initializeApp(FB_CONFIG);
+  auth=firebase.auth();
   db=firebase.firestore();
+  try{
+    await auth.signInAnonymously();
+  }catch(e){
+    console.error('Anonim autentifikatsiya xato (Firebase Console-da Anonymous provider yoqilganini tekshiring):',e);
+  }
 }
 
 // Firebase dan xatlarni yuklash
