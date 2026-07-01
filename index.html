@@ -571,11 +571,47 @@ function applyUser(u){
   }
 }
 
-function doLogin(){
+const FB_EMAIL_DOMAIN = 'xat-nazorat.uz';
+const FB_PASS_MAP = {
+  'kodirov.u':'Kodi@2025',
+  'davletov.m':'Davl@2025',
+  'nazarov.f':'Naza@2025',
+  'mavlonov.f':'Mavl@2025',
+  'lutfullayev.n':'Lutf@2025',
+  'rahimov.d':'Rahi@2025',
+  'jamolov.b':'Jamo@2025',
+  'abdurakhmanov.a':'Abdu@2025',
+  'badalov.r':'Bada@2025',
+  'mannonov.b':'Mann@2025',
+  'urolov.j':'Urol@2025',
+  'bakhodirov.j':'Bakh@2025',
+  'akhmedov.o':'Akhm@2025'
+};
+
+async function doLogin(){
   const l=document.getElementById('loginInput').value.trim();
   const p=document.getElementById('passInput').value;
   const u=USERS.find(x=>x.login===l && x.pass===p);
-  if(!u){document.getElementById('loginErr').style.display='block';return;}
+  const errEl=document.getElementById('loginErr');
+  if(!u){errEl.textContent="Login yoki parol noto'g'ri";errEl.style.display='block';return;}
+  errEl.style.display='none';
+
+  // Ilova login'i to'g'ri bo'lsa ham, Firestore'ga kirish uchun HAQIQIY Firebase
+  // hisobiga ham kiramiz. Shu orqali faqat shu 13 xodim ma'lumotlarni o'qiy oladi,
+  // begona hech kim (anonim emas, haqiqiy autentifikatsiya).
+  try{
+    if(!auth){ await initFirebase(); }
+    const fbPass = FB_PASS_MAP[l];
+    if(auth && fbPass){
+      await auth.signInWithEmailAndPassword(l + '@' + FB_EMAIL_DOMAIN, fbPass);
+    }
+  }catch(e){
+    console.error('Firebase login xato:', e);
+    errEl.textContent="Tizimga ulanib bo'lmadi. Administratorga murojaat qiling (Firebase hisobi).";
+    errEl.style.display='block';
+    return;
+  }
+
   // Sessiyani saqlash
   try{ sessionStorage.setItem('currentUserLogin', l); sessionStorage.setItem('currentUserPass', p); }catch(e){}
   applyUser(u);
@@ -2119,21 +2155,13 @@ function loadScript(src){
   });
 }
 async function initFirebase(){
-  if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
-    if(auth && !auth.currentUser){ try{ await auth.signInAnonymously(); }catch(e){ console.error('Anon signIn xato:',e); } }
-    return;
-  }
+  if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){return;}
   await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
   await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js');
   await loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js');
   fbApp=firebase.initializeApp(FB_CONFIG);
   auth=firebase.auth();
   db=firebase.firestore();
-  try{
-    await auth.signInAnonymously();
-  }catch(e){
-    console.error('Anonim autentifikatsiya xato (Firebase Console-da Anonymous provider yoqilganini tekshiring):',e);
-  }
 }
 
 // Firebase dan xatlarni yuklash
